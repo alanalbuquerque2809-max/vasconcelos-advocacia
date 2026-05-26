@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vasconcelos Advocacia — Gestão Jurídica</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--bg:#ffffff;--bg2:#f7f6f3;--bg3:#f0efe9;--border:#e3e2db;--border2:#d4d3cc;--text:#1a1915;--text2:#5f5e5a;--text3:#9b9a96;--info-bg:#e6f1fb;--info:#185fa5;--success-bg:#eaf3de;--success:#3b6d11;--warn-bg:#faeeda;--warn:#854f0b;--danger-bg:#fcebeb;--danger:#a32d2d;--purple-bg:#eeedfe;--purple:#3c3489;--teal-bg:#e1f5ee;--teal:#0f6e56;--radius:8px;--radius-sm:5px;--shadow:0 1px 4px rgba(0,0,0,0.08)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;color:var(--text);background:var(--bg);min-height:100vh}
+input,select,textarea,button{font-family:inherit;font-size:13px;border:0.5px solid var(--border2);border-radius:var(--radius-sm);padding:6px 10px;outline:none;background:var(--bg);color:var(--text)}
+input:focus,select:focus,textarea:focus{border-color:var(--info);box-shadow:0 0 0 2px rgba(24,95,165,0.12)}
+textarea{resize:vertical;height:55px}
+
+/* LOGIN */
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--bg2)}
+.login-card{background:var(--bg);border:0.5px solid var(--border);border-radius:12px;padding:2rem;width:340px;box-shadow:var(--shadow);text-align:center}
+.login-card h1{font-size:20px;font-weight:600;margin-bottom:4px}
+.login-card p{font-size:12px;color:var(--text2);margin-bottom:1.5rem}
+.login-card select{width:100%;margin-bottom:12px;font-size:14px;padding:8px 12px}
+.login-card button{width:100%;padding:10px;font-size:14px;font-weight:500;background:var(--info-bg);color:var(--info);border-color:var(--info);border-radius:var(--radius);cursor:pointer}
+.login-card button:hover{opacity:0.85}
+.oab-tag{display:inline-block;font-size:11px;background:var(--info-bg);color:var(--info);padding:2px 8px;border-radius:20px;margin-bottom:1.2rem}
+
+/* APP */
+#app{display:none}
+.topbar{display:flex;align-items:center;gap:12px;padding:10px 20px;background:var(--bg);border-bottom:0.5px solid var(--border);position:sticky;top:0;z-index:10}
+.topbar-brand{font-weight:600;font-size:15px;flex:1}
+.topbar-brand span{font-size:11px;font-weight:400;color:var(--text2);margin-left:6px}
+.avt{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;cursor:pointer;flex-shrink:0}
+.online-dot{width:8px;height:8px;border-radius:50%;background:#3b6d11;flex-shrink:0}
+#online-count{font-size:12px;color:var(--text2)}
+
+.container{max-width:1200px;margin:0 auto;padding:1.2rem 1rem}
+
+.tabs{display:flex;gap:3px;margin-bottom:1rem;border-bottom:0.5px solid var(--border);flex-wrap:wrap}
+.tab{padding:7px 14px;font-size:13px;cursor:pointer;border-radius:var(--radius-sm) var(--radius-sm) 0 0;border:0.5px solid transparent;color:var(--text2);white-space:nowrap;transition:all .15s}
+.tab:hover{background:var(--bg2)}
+.tab.active{background:var(--bg);border-color:var(--border);border-bottom-color:var(--bg);color:var(--text);font-weight:500;margin-bottom:-0.5px}
+
+.top-bar{display:flex;align-items:center;gap:8px;margin-bottom:1rem;flex-wrap:wrap}
+.top-bar input{flex:1;min-width:130px}
+.btn{font-size:13px;padding:6px 12px;border-radius:var(--radius-sm);border:0.5px solid var(--border2);background:transparent;color:var(--text);cursor:pointer;white-space:nowrap;transition:all .15s}
+.btn:hover{background:var(--bg2)}
+.btn-primary{background:var(--info-bg);color:var(--info);border-color:var(--info)}
+.btn-primary:hover{opacity:0.85}
+.btn-danger{background:var(--danger-bg);color:var(--danger);border-color:var(--danger)}
+.btn-disabled{opacity:0.35;cursor:not-allowed}
+
+.tbl-wrap{overflow-x:auto;border:0.5px solid var(--border);border-radius:var(--radius)}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{background:var(--bg2);padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none}
+th:hover{color:var(--text)}
+td{padding:7px 10px;border-bottom:0.5px solid var(--border);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg2)}
+
+.badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500;white-space:nowrap}
+.b-blue{background:var(--info-bg);color:var(--info)}
+.b-green{background:var(--success-bg);color:var(--success)}
+.b-yellow{background:var(--warn-bg);color:var(--warn)}
+.b-red{background:var(--danger-bg);color:var(--danger)}
+.b-gray{background:var(--bg3);color:var(--text2)}
+.b-purple{background:var(--purple-bg);color:var(--purple)}
+.b-teal{background:var(--teal-bg);color:var(--teal)}
+
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px;margin-bottom:1rem}
+.sc{background:var(--bg2);border-radius:var(--radius);padding:10px 12px;text-align:center;border:0.5px solid var(--border)}
+.sn{font-size:20px;font-weight:600}
+.sl{font-size:11px;color:var(--text2);margin-top:2px}
+
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);align-items:center;justify-content:center;z-index:100}
+.modal-bg.open{display:flex}
+.modal{background:var(--bg);border-radius:12px;border:0.5px solid var(--border);padding:1.5rem;width:460px;max-width:95vw;max-height:85vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,0.12)}
+.modal h3{font-size:15px;font-weight:600;margin-bottom:1rem}
+.fr{margin-bottom:10px}
+.fr label{display:block;font-size:12px;color:var(--text2);margin-bottom:3px;font-weight:500}
+.fr input,.fr select,.fr textarea{width:100%}
+.mbtns{display:flex;justify-content:flex-end;gap:8px;margin-top:1.2rem}
+
+.aud-card{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:8px;transition:border-color .15s}
+.aud-card:hover{border-color:var(--border2)}
+.aud-header{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.aud-date{background:var(--info-bg);color:var(--info);border-radius:var(--radius-sm);padding:6px 10px;text-align:center;min-width:50px;flex-shrink:0}
+.aud-day{font-size:20px;font-weight:700;line-height:1}
+.aud-mon{font-size:10px;margin-top:1px;font-weight:500}
+.month-hdr{font-size:13px;font-weight:600;color:var(--text2);padding:8px 0 6px;border-bottom:0.5px solid var(--border);margin-bottom:8px}
+
+.log-item{padding:8px 0;border-bottom:0.5px solid var(--border);display:flex;gap:10px;align-items:flex-start}
+.log-item:last-child{border-bottom:none}
+.mini-avt{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0;margin-top:1px}
+
+.empty{text-align:center;padding:2.5rem;color:var(--text2);font-size:13px;line-height:1.8}
+.notice{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--warn-bg);border-radius:var(--radius-sm);font-size:12px;color:var(--warn);margin-bottom:10px;border:0.5px solid #e8c97a}
+
+.realtime-toast{position:fixed;bottom:20px;right:20px;background:var(--text);color:white;padding:10px 16px;border-radius:var(--radius);font-size:13px;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none}
+.realtime-toast.show{opacity:1}
+
+@media(max-width:600px){.topbar{padding:8px 12px}.container{padding:0.8rem 0.6rem}.tab{padding:5px 10px;font-size:12px}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div style="font-size:32px;margin-bottom:8px">⚖️</div>
+    <h1>Vasconcelos Advocacia</h1>
+    <p>Sistema de Gestão Jurídica</p>
+    <div class="oab-tag">OAB/AM 21.264 — Dr. Tailler Vasconcelos</div>
+    <select id="login-user">
+      <option value="">Selecione seu nome...</option>
+      <option value="Alan Albuquerque">Alan Albuquerque</option>
+      <option value="Tailler Vasconcelos">Tailler Vasconcelos</option>
+      <option value="Taiza Vasconcelos">Taiza Vasconcelos</option>
+      <option value="Claiza Dias">Claiza Dias</option>
+    </select>
+    <button onclick="doLogin()">Entrar no Sistema</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-brand">⚖️ Vasconcelos Advocacia <span>OAB/AM 21.264</span></div>
+    <div class="online-dot"></div>
+    <span id="online-count">online</span>
+    <div class="avt" id="top-avt" onclick="doLogout()" title="Sair"></div>
+  </div>
+
+  <div class="container">
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('processos',this)">📁 Processos</div>
+      <div class="tab" onclick="switchTab('clientes',this)">👥 Clientes</div>
+      <div class="tab" onclick="switchTab('tarefas',this)">✅ Tarefas</div>
+      <div class="tab" onclick="switchTab('audiencias',this)">📅 Audiências</div>
+      <div class="tab" onclick="switchTab('historico',this)">🕐 Histórico</div>
+    </div>
+
+    <!-- PROCESSOS -->
+    <div id="tab-processos">
+      <div class="stats" id="stats-proc"></div>
+      <div class="top-bar">
+        <input type="text" placeholder="Buscar processo, cliente..." id="searchProc" oninput="renderProc()">
+        <select id="filtStatus" onchange="renderProc()">
+          <option value="">Todos os status</option>
+          <option>Em andamento</option><option>Aguardando</option><option>Aguardando Julgamento</option><option>Encerrado</option><option>Urgente</option>
+        </select>
+        <select id="filtArea" onchange="renderProc()">
+          <option value="">Todas as áreas</option>
+          <option>Consumidor</option><option>Trabalhista</option><option>Cível</option><option>Criminal</option><option>Família</option><option>Previdenciário</option>
+        </select>
+        <button class="btn btn-primary" onclick="openModal('proc')">+ Novo</button>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th onclick="srt('processos','numero')">Nº Processo ⇅</th>
+            <th onclick="srt('processos','cliente')">Cliente ⇅</th>
+            <th onclick="srt('processos','area')">Área ⇅</th>
+            <th onclick="srt('processos','status')">Status ⇅</th>
+            <th onclick="srt('processos','prazo')">Prazo ⇅</th>
+            <th onclick="srt('processos','responsavel')">Responsável ⇅</th>
+            <th>Ações</th>
+          </tr></thead>
+          <tbody id="tbProc"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- CLIENTES -->
+    <div id="tab-clientes" style="display:none">
+      <div class="top-bar">
+        <input type="text" placeholder="Buscar cliente..." id="searchCli" oninput="renderCli()">
+        <button class="btn btn-primary" onclick="openModal('cli')">+ Novo cliente</button>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th onclick="srt('clientes','nome')">Nome ⇅</th>
+            <th onclick="srt('clientes','cpf')">CPF/CNPJ ⇅</th>
+            <th onclick="srt('clientes','telefone')">Telefone ⇅</th>
+            <th onclick="srt('clientes','cidade')">Cidade ⇅</th>
+            <th onclick="srt('clientes','processos')">Processos ⇅</th>
+            <th>Ações</th>
+          </tr></thead>
+          <tbody id="tbCli"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAREFAS -->
+    <div id="tab-tarefas" style="display:none">
+      <div class="stats" id="stats-tar"></div>
+      <div class="top-bar">
+        <input type="text" placeholder="Buscar tarefa..." id="searchTar" oninput="renderTar()">
+        <select id="filtTarSt" onchange="renderTar()">
+          <option value="">Todos</option><option>Pendente</option><option>Em andamento</option><option>Aguardando Julgamento</option><option>Concluída</option>
+        </select>
+        <select id="filtTarTipo" onchange="renderTar()">
+          <option value="">Todos os tipos</option>
+          <option>Fazer Impugnação</option><option>Fazer Recurso</option><option>Fazer Diligência</option>
+          <option>Fazer Contrarrazões</option><option>Fazer Embargos de Declaração</option><option>Fazer Contestação</option>
+          <option>Solicitar Execução</option><option>Expedir Alvará</option><option>Arquivado em Definitivo</option>
+        </select>
+        <button class="btn btn-primary" onclick="openModal('tar')">+ Nova tarefa</button>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th onclick="srt('tarefas','tipo')">Tipo ⇅</th>
+            <th onclick="srt('tarefas','processo')">Processo ⇅</th>
+            <th onclick="srt('tarefas','cliente')">Cliente ⇅</th>
+            <th onclick="srt('tarefas','responsavel')">Responsável ⇅</th>
+            <th onclick="srt('tarefas','prazo')">Prazo ⇅</th>
+            <th onclick="srt('tarefas','status')">Status ⇅</th>
+            <th>Ações</th>
+          </tr></thead>
+          <tbody id="tbTar"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- AUDIÊNCIAS -->
+    <div id="tab-audiencias" style="display:none">
+      <div class="top-bar">
+        <input type="text" placeholder="Buscar cliente, processo..." id="searchAud" oninput="renderAud()">
+        <select id="filtAudMes" onchange="renderAud()">
+          <option value="">Todos os meses</option>
+          <option value="2026-05">Maio 2026</option><option value="2026-06">Junho 2026</option>
+          <option value="2026-07">Julho 2026</option><option value="2026-08">Agosto 2026</option>
+          <option value="2026-09">Setembro 2026</option><option value="2026-10">Outubro 2026</option>
+          <option value="2026-11">Novembro 2026</option><option value="2026-12">Dezembro 2026</option>
+        </select>
+        <button class="btn btn-primary" onclick="openModal('aud')">+ Nova audiência</button>
+      </div>
+      <div id="audList"></div>
+    </div>
+
+    <!-- HISTÓRICO -->
+    <div id="tab-historico" style="display:none">
+      <div id="log-notice" class="notice" style="display:none">🔒 Somente <strong>Alan Albuquerque</strong> pode apagar o histórico.</div>
+      <div class="top-bar">
+        <input type="text" placeholder="Filtrar histórico..." id="searchLog" oninput="renderLog()">
+        <select id="filtLogUser" onchange="renderLog()">
+          <option value="">Todos os usuários</option>
+          <option>Alan Albuquerque</option><option>Tailler Vasconcelos</option><option>Taiza Vasconcelos</option><option>Claiza Dias</option>
+        </select>
+        <button id="btnLimpar" class="btn" onclick="clearLog()">🗑️ Limpar</button>
+      </div>
+      <div id="logList"></div>
+    </div>
+  </div>
+</div>
+
+<div id="modal" class="modal-bg"></div>
+<div id="toast" class="realtime-toast"></div>
+
+<script>
+const SUPABASE_URL='https://ofqexayievtvcngkpfir.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9mcWV4YXlpZXZ0dmNuZ2twZmlyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3NzMzNzgsImV4cCI6MjA5NTM0OTM3OH0.Ub82wZ_0FrGvJe9m1B0-8YuNj67l5-_WmBsbuCIE4jo';
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+const USERS=['Alan Albuquerque','Tailler Vasconcelos','Taiza Vasconcelos','Claiza Dias'];
+const AVT_BG=['#E6F1FB','#EAF3DE','#EEEDFE','#FAEEDA'];
+const AVT_TXT=['#185FA5','#3B6D11','#3C3489','#854F0B'];
+const MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const TIPOS_TAREFA=['Fazer Impugnação','Fazer Recurso','Fazer Diligência','Fazer Contrarrazões','Fazer Embargos de Declaração','Fazer Contestação','Solicitar Execução','Expedir Alvará','Arquivado em Definitivo'];
+const SC_PROC={'Em andamento':'b-blue','Aguardando':'b-yellow','Aguardando Julgamento':'b-purple','Encerrado':'b-gray','Urgente':'b-red'};
+const SC_TAR={'Pendente':'b-yellow','Em andamento':'b-blue','Aguardando Julgamento':'b-purple','Concluída':'b-green'};
+const TC={'Fazer Impugnação':'b-blue','Fazer Recurso':'b-purple','Fazer Diligência':'b-teal','Fazer Contrarrazões':'b-blue','Fazer Embargos de Declaração':'b-yellow','Fazer Contestação':'b-blue','Solicitar Execução':'b-teal','Expedir Alvará':'b-green','Arquivado em Definitivo':'b-gray'};
+
+let currentUser='';
+let D={processos:[],clientes:[],tarefas:[],audiencias:[],historico:[]};
+let ss={};
+
+// LOGIN
+function doLogin(){
+  const u=document.getElementById('login-user').value;
+  if(!u){alert('Selecione seu nome para continuar.');return;}
+  currentUser=u;
+  const i=USERS.indexOf(u);
+  const avt=document.getElementById('top-avt');
+  avt.textContent=u.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  avt.style.background=AVT_BG[i]||'#E6F1FB';
+  avt.style.color=AVT_TXT[i]||'#185FA5';
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').style.display='block';
+  initApp();
+}
+function doLogout(){
+  if(confirm('Deseja sair do sistema?')){
+    currentUser='';
+    document.getElementById('login-screen').style.display='flex';
+    document.getElementById('app').style.display='none';
+    document.getElementById('login-user').value='';
+  }
+}
+
+// INIT
+async function initApp(){
+  await loadAll();
+  setupRealtime();
+  renderProc();
+}
+
+async function loadAll(){
+  const [p,c,t,a,h]=await Promise.all([
+    sb.from('processos').select('*').order('id'),
+    sb.from('clientes').select('*').order('id'),
+    sb.from('tarefas').select('*').order('id'),
+    sb.from('audiencias').select('*').order('data'),
+    sb.from('historico').select('*').order('created_at',{ascending:false}).limit(200)
+  ]);
+  D.processos=p.data||[];
+  D.clientes=c.data||[];
+  D.tarefas=t.data||[];
+  D.audiencias=a.data||[];
+  D.historico=h.data||[];
+}
+
+// REALTIME
+function setupRealtime(){
+  ['processos','clientes','tarefas','audiencias','historico'].forEach(tbl=>{
+    sb.channel(tbl+'-changes')
+      .on('postgres_changes',{event:'*',schema:'public',table:tbl},payload=>{
+        handleRealtimeChange(tbl,payload);
+      }).subscribe();
+  });
+}
+
+function handleRealtimeChange(tbl,payload){
+  const {eventType,new:novo,old:antigo}=payload;
+  if(eventType==='INSERT'){
+    D[tbl]=D[tbl].filter(r=>r.id!==novo.id);
+    if(tbl==='historico') D[tbl].unshift(novo);
+    else D[tbl].push(novo);
+  } else if(eventType==='UPDATE'){
+    D[tbl]=D[tbl].map(r=>r.id===novo.id?novo:r);
+  } else if(eventType==='DELETE'){
+    D[tbl]=D[tbl].filter(r=>r.id!==antigo.id);
+  }
+  refreshCurrent(tbl);
+  if(eventType!=='INSERT'||tbl!=='historico'){
+    const msg=eventType==='INSERT'?'➕ Novo registro adicionado':eventType==='UPDATE'?'✏️ Registro atualizado':'🗑️ Registro removido';
+    showToast(msg+' em '+tbl);
+  }
+}
+
+function refreshCurrent(tbl){
+  const active=document.querySelector('.tab.active');
+  if(!active)return;
+  const cur=active.getAttribute('onclick').replace("switchTab('","").replace("',this)","");
+  if(cur==='processos')renderProc();
+  if(cur==='clientes')renderCli();
+  if(cur==='tarefas')renderTar();
+  if(cur==='audiencias')renderAud();
+  if(cur==='historico')renderLog();
+  if(tbl==='processos')renderProc();
+  if(tbl==='clientes')renderCli();
+  if(tbl==='tarefas')renderTar();
+  if(tbl==='audiencias')renderAud();
+  if(tbl==='historico')renderLog();
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+// LOG
+async function addLog(acao,item,campo,antes,depois){
+  await sb.from('historico').insert({usuario:currentUser,acao,item,campo:campo||'',valor_antes:antes||'',valor_depois:depois||''});
+}
+
+// HELPERS
+function g(id){return document.getElementById(id)}
+function v(id){return g(id)?g(id).value:''}
+function fmtD(d){if(!d)return'—';const p=d.split('T')[0].split('-');return`${p[2]}/${p[1]}/${p[0]}`}
+function isPast(d){return d&&new Date(d)<new Date()}
+function badge(s,map){return`<span class="badge ${(map||SC_PROC)[s]||'b-gray'}">${s}</span>`}
+function uOpts(sel){return USERS.map(u=>`<option${u===sel?' selected':''}>${u}</option>`).join('')}
+function tipoOpts(sel){return TIPOS_TAREFA.map(t=>`<option${t===sel?' selected':''}>${t}</option>`).join('')}
+function aOpts(sel){return['Consumidor','Trabalhista','Cível','Criminal','Família','Previdenciário'].map(a=>`<option${a===sel?' selected':''}>${a}</option>`).join('')}
+function stProcOpts(sel){return['Em andamento','Aguardando','Aguardando Julgamento','Encerrado','Urgente'].map(s=>`<option${s===sel?' selected':''}>${s}</option>`).join('')}
+function stTarOpts(sel){return['Pendente','Em andamento','Aguardando Julgamento','Concluída'].map(s=>`<option${s===sel?' selected':''}>${s}</option>`).join('')}
+function tipoAudOpts(sel){return['Audiência de Conciliação','Audiência de Instrução','Audiência de Julgamento','Audiência Inicial','Audiência de Custódia','Outra'].map(t=>`<option${t===sel?' selected':''}>${t}</option>`).join('')}
+function isAlan(){return currentUser==='Alan Albuquerque'}
+
+function srt(tbl,col){
+  const k=tbl+col;ss[k]=ss[k]==='asc'?'desc':'asc';
+  const d=ss[k]==='asc'?1:-1;
+  D[tbl].sort((a,b)=>String(a[col]||'').localeCompare(String(b[col]||''))*d);
+  if(tbl==='processos')renderProc();
+  if(tbl==='clientes')renderCli();
+  if(tbl==='tarefas')renderTar();
+  if(tbl==='audiencias')renderAud();
+}
+
+function switchTab(name,el){
+  ['processos','clientes','tarefas','audiencias','historico'].forEach(t=>g('tab-'+t).style.display='none');
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  g('tab-'+name).style.display='';
+  el.classList.add('active');
+  if(name==='processos')renderProc();
+  if(name==='clientes')renderCli();
+  if(name==='tarefas')renderTar();
+  if(name==='audiencias')renderAud();
+  if(name==='historico'){updateLogPerm();renderLog();}
+}
+
+// RENDERS
+function renderProc(){
+  const q=(v('searchProc')||'').toLowerCase();
+  const st=v('filtStatus'),ar=v('filtArea');
+  const rows=D.processos.filter(r=>(!q||(r.numero+r.cliente+r.responsavel+(r.obs||'')).toLowerCase().includes(q))&&(!st||r.status===st)&&(!ar||r.area===ar));
+  const tb=g('tbProc');
+  if(!tb)return;
+  tb.innerHTML=rows.length?rows.map(r=>`<tr>
+    <td style="font-family:monospace;font-size:11px">${r.numero||'—'}</td>
+    <td style="font-weight:500">${r.cliente||'—'}</td>
+    <td>${badge(r.area,'')}</td>
+    <td>${badge(r.status,SC_PROC)}</td>
+    <td style="color:${isPast(r.prazo)?'var(--danger)':'inherit'};font-weight:${isPast(r.prazo)?600:400}">${fmtD(r.prazo)}</td>
+    <td>${r.responsavel||'—'}</td>
+    <td style="white-space:nowrap">
+      <button class="btn" style="padding:3px 7px" onclick="openEdit('proc',${r.id})">✏️</button>
+      <button class="btn btn-danger" style="padding:3px 7px" onclick="delRow('processos',${r.id},'proc')">🗑️</button>
+    </td></tr>`).join(''):`<tr><td colspan="7" class="empty">Nenhum processo encontrado</td></tr>`;
+  const tot=D.processos.length,urg=D.processos.filter(r=>r.status==='Urgente').length,and=D.processos.filter(r=>r.status==='Em andamento').length,enc=D.processos.filter(r=>r.status==='Encerrado').length,agj=D.processos.filter(r=>r.status==='Aguardando Julgamento').length;
+  g('stats-proc').innerHTML=`
+    <div class="sc"><div class="sn">${tot}</div><div class="sl">Total</div></div>
+    <div class="sc"><div class="sn" style="color:var(--info)">${and}</div><div class="sl">Em andamento</div></div>
+    <div class="sc"><div class="sn" style="color:var(--purple)">${agj}</div><div class="sl">Ag. Julgamento</div></div>
+    <div class="sc"><div class="sn" style="color:var(--danger)">${urg}</div><div class="sl">Urgentes</div></div>
+    <div class="sc"><div class="sn" style="color:var(--text2)">${enc}</div><div class="sl">Encerrados</div></div>`;
+}
+
+function renderCli(){
+  const q=(v('searchCli')||'').toLowerCase();
+  const rows=D.clientes.filter(r=>!q||(r.nome+r.cpf+r.telefone+r.cidade).toLowerCase().includes(q));
+  const tb=g('tbCli');if(!tb)return;
+  tb.innerHTML=rows.length?rows.map(r=>`<tr>
+    <td style="font-weight:500">${r.nome}</td>
+    <td style="font-family:monospace;font-size:11px">${r.cpf||'—'}</td>
+    <td>${r.telefone||'—'}</td>
+    <td>${r.cidade||'—'}</td>
+    <td><span class="badge b-blue">${r.processos||0}</span></td>
+    <td style="white-space:nowrap">
+      <button class="btn" style="padding:3px 7px" onclick="openEdit('cli',${r.id})">✏️</button>
+      <button class="btn btn-danger" style="padding:3px 7px" onclick="delRow('clientes',${r.id},'cli')">🗑️</button>
+    </td></tr>`).join(''):`<tr><td colspan="6" class="empty">Nenhum cliente encontrado</td></tr>`;
+}
+
+function renderTar(){
+  const q=(v('searchTar')||'').toLowerCase();
+  const st=v('filtTarSt'),tp=v('filtTarTipo');
+  const rows=D.tarefas.filter(r=>(!q||(r.tipo+r.processo+r.cliente+r.responsavel).toLowerCase().includes(q))&&(!st||r.status===st)&&(!tp||r.tipo===tp));
+  const tb=g('tbTar');if(!tb)return;
+  tb.innerHTML=rows.length?rows.map(r=>`<tr>
+    <td>${badge(r.tipo,TC)}</td>
+    <td style="font-family:monospace;font-size:11px">${(r.processo||'').slice(0,18)}…</td>
+    <td>${r.cliente||'—'}</td>
+    <td>${r.responsavel||'—'}</td>
+    <td style="color:${isPast(r.prazo)?'var(--danger)':'inherit'};font-weight:${isPast(r.prazo)?600:400}">${fmtD(r.prazo)}</td>
+    <td>${badge(r.status,SC_TAR)}</td>
+    <td style="white-space:nowrap">
+      <button class="btn" style="padding:3px 7px" onclick="openEdit('tar',${r.id})">✏️</button>
+      <button class="btn btn-danger" style="padding:3px 7px" onclick="delRow('tarefas',${r.id},'tar')">🗑️</button>
+    </td></tr>`).join(''):`<tr><td colspan="7" class="empty">Nenhuma tarefa encontrada</td></tr>`;
+  const pen=D.tarefas.filter(r=>r.status==='Pendente').length,and=D.tarefas.filter(r=>r.status==='Em andamento').length,con=D.tarefas.filter(r=>r.status==='Concluída').length,agj=D.tarefas.filter(r=>r.status==='Aguardando Julgamento').length;
+  g('stats-tar').innerHTML=`
+    <div class="sc"><div class="sn" style="color:var(--warn)">${pen}</div><div class="sl">Pendentes</div></div>
+    <div class="sc"><div class="sn" style="color:var(--info)">${and}</div><div class="sl">Em andamento</div></div>
+    <div class="sc"><div class="sn" style="color:var(--purple)">${agj}</div><div class="sl">Ag. Julgamento</div></div>
+    <div class="sc"><div class="sn" style="color:var(--success)">${con}</div><div class="sl">Concluídas</div></div>`;
+}
+
+function renderAud(){
+  const q=(v('searchAud')||'').toLowerCase();
+  const mes=v('filtAudMes');
+  let rows=D.audiencias.filter(r=>(!q||(r.cliente+r.processo+r.tipo+r.local+r.responsavel).toLowerCase().includes(q))&&(!mes||r.data.startsWith(mes)));
+  rows.sort((a,b)=>a.data.localeCompare(b.data)||a.hora.localeCompare(b.hora));
+  const el=g('audList');if(!el)return;
+  if(!rows.length){el.innerHTML=`<div class="empty">📅 Nenhuma audiência cadastrada.<br><small>Clique em "+ Nova audiência" para adicionar.</small></div>`;return;}
+  const hoje=new Date();
+  const mesAtual=`${hoje.getFullYear()}-${String(hoje.getMonth()+1).padStart(2,'0')}`;
+  const grp={};
+  rows.forEach(r=>{const m=r.data.slice(0,7);if(!grp[m])grp[m]=[];grp[m].push(r);});
+  el.innerHTML=Object.entries(grp).map(([m,aud])=>{
+    const[y,mo]=m.split('-');
+    const isCur=m===mesAtual;
+    return`<div class="month-hdr">📅 ${MESES[+mo-1]} ${y}${isCur?' <span class="badge b-blue" style="font-size:10px">Mês atual</span>':''}</div>`+
+    aud.map(r=>{
+      const[,mo2,di]=r.data.split('-');
+      const past=new Date(r.data+'T'+(r.hora||'00:00'))<new Date();
+      const ui=USERS.indexOf(r.responsavel);
+      const tc=ui>=0?AVT_TXT[ui]:'var(--info)';
+      return`<div class="aud-card">
+        <div class="aud-header">
+          <div class="aud-date" style="${past?'background:var(--bg3);color:var(--text2)':''}">
+            <div class="aud-day">${di}</div>
+            <div class="aud-mon">${MESES[+mo2-1].slice(0,3).toUpperCase()}</div>
+          </div>
+          <div style="flex:1">
+            <div style="font-weight:600;font-size:13px">${r.cliente}</div>
+            <div style="font-size:12px;color:var(--text2);margin-top:2px">🕐 ${r.hora||'—'} &nbsp;|&nbsp; <span class="badge b-teal" style="font-size:10px">${r.tipo}</span>${past?' <span class="badge b-gray" style="font-size:10px">Realizada</span>':''}</div>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0">
+            <button class="btn" style="padding:3px 7px" onclick="openEdit('aud',${r.id})">✏️</button>
+            <button class="btn btn-danger" style="padding:3px 7px" onclick="delRow('audiencias',${r.id},'aud')">🗑️</button>
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--text2);display:flex;flex-wrap:wrap;gap:10px;padding-top:7px;border-top:0.5px solid var(--border)">
+          <span>📋 ${r.processo?(r.processo.slice(0,25)+'…'):'—'}</span>
+          <span>📍 ${r.local||'—'}</span>
+          <span style="color:${tc}">👤 ${r.responsavel||'—'}</span>
+          ${r.obs?`<span>📝 ${r.obs}</span>`:''}
+        </div>
+      </div>`;
+    }).join('');
+  }).join('');
+}
+
+function renderLog(){
+  const q=(v('searchLog')||'').toLowerCase();
+  const u=v('filtLogUser');
+  const rows=D.historico.filter(l=>(!q||(l.usuario+l.acao+l.item+l.campo+l.valor_antes+l.valor_depois).toLowerCase().includes(q))&&(!u||l.usuario===u));
+  const el=g('logList');if(!el)return;
+  if(!rows.length){el.innerHTML=`<div class="empty">🕐 Nenhuma alteração registrada ainda.<br><small>Todas as modificações feitas aparecerão aqui em tempo real.</small></div>`;return;}
+  el.innerHTML=rows.map(l=>{
+    const ui=USERS.indexOf(l.usuario);
+    const bg=ui>=0?AVT_BG[ui]:'#E6F1FB',tc=ui>=0?AVT_TXT[ui]:'var(--info)';
+    const ini=(l.usuario||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    const ts=new Date(l.created_at).toLocaleString('pt-BR');
+    return`<div class="log-item">
+      <div class="mini-avt" style="background:${bg};color:${tc}">${ini}</div>
+      <div style="flex:1">
+        <span style="font-weight:600;color:${tc}">${l.usuario}</span> ${l.acao} <strong>${l.item}</strong>${l.campo?` — <em style="color:var(--text2)">${l.campo}</em>`:''}
+        ${l.valor_antes?`<div style="margin-top:3px;font-size:12px"><span style="color:var(--danger)">Antes: ${l.valor_antes}</span> → <span style="color:var(--success)">Depois: ${l.valor_depois}</span></div>`:''}
+        <div style="font-size:11px;color:var(--text2);margin-top:2px">🕐 ${ts}</div>
+      </div></div>`;
+  }).join('');
+}
+
+function updateLogPerm(){
+  const btn=g('btnLimpar');
+  const notice=g('log-notice');
+  if(!btn||!notice)return;
+  if(isAlan()){btn.className='btn btn-danger';btn.disabled=false;notice.style.display='none';}
+  else{btn.className='btn btn-disabled';btn.disabled=true;notice.style.display='flex';}
+}
+
+// CRUD
+async function delRow(tbl,id,type){
+  const row=D[tbl].find(r=>r.id===id);
+  if(!confirm(`Excluir "${row.numero||row.nome||row.tipo||row.cliente}"?\n\nRegistrado em nome de: ${currentUser}`))return;
+  await sb.from(tbl).delete().eq('id',id);
+  await addLog('excluiu',row.numero||row.nome||row.tipo||row.cliente,'','','');
+}
+
+async function clearLog(){
+  if(!isAlan()){alert('Apenas Alan Albuquerque pode apagar o histórico.');return;}
+  if(!confirm('Apagar todo o histórico?\n\nEssa ação é irreversível.'))return;
+  await sb.from('historico').delete().neq('id',0);
+  D.historico=[];renderLog();
+}
+
+// MODAL
+function showModal(html){const m=g('modal');m.innerHTML=`<div class="modal">${html}</div>`;m.classList.add('open');}
+function closeModal(){g('modal').classList.remove('open');}
+
+function openModal(type){
+  if(type==='proc') showModal(`
+    <h3>📁 Novo processo</h3>
+    <div class="fr"><label>Nº Processo</label><input id="f0" placeholder="0000000-00.0000.8.04.0000"></div>
+    <div class="fr"><label>Cliente</label><input id="f1"></div>
+    <div class="fr"><label>Área</label><select id="f2">${aOpts('')}</select></div>
+    <div class="fr"><label>Status</label><select id="f3">${stProcOpts('Em andamento')}</select></div>
+    <div class="fr"><label>Prazo</label><input type="date" id="f4"></div>
+    <div class="fr"><label>Responsável</label><select id="f5">${uOpts(currentUser)}</select></div>
+    <div class="fr"><label>Observações</label><textarea id="f6"></textarea></div>
+    <div class="mbtns"><button class="btn" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="saveProc()">Salvar</button></div>`);
+  else if(type==='cli') showModal(`
+    <h3>👤 Novo cliente</h3>
+    <div class="fr"><label>Nome completo</label><input id="f0"></div>
+    <div class="fr"><label>CPF/CNPJ</label><input id="f1"></div>
+    <div class="fr"><label>Telefone</label><input id="f2"></div>
+    <div class="fr"><label>Cidade</label><input id="f3" placeholder="Ex: Manaus"></div>
+    <div class="mbtns"><button class="btn" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="saveCli()">Salvar</button></div>`);
+  else if(type==='tar') showModal(`
+    <h3>✅ Nova tarefa</h3>
+    <div class="fr"><label>Tipo de tarefa</label><select id="f0">${tipoOpts('')}</select></div>
+    <div class="fr"><label>Processo</label><input id="f1" placeholder="Nº do processo"></div>
+    <div class="fr"><label>Cliente</label><input id="f2"></div>
+    <div class="fr"><label>Responsável</label><select id="f3">${uOpts(currentUser)}</select></div>
+    <div class="fr"><label>Prazo</label><input type="date" id="f4"></div>
+    <div class="fr"><label>Status</label><select id="f5">${stTarOpts('Pendente')}</select></div>
+    <div class="fr"><label>Observações</label><textarea id="f6"></textarea></div>
+    <div class="mbtns"><button class="btn" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="saveTar()">Salvar</button></div>`);
+  else showModal(`
+    <h3>📅 Nova audiência</h3>
+    <div class="fr"><label>Cliente</label><input id="f0"></div>
+    <div class="fr"><label>Processo</label><input id="f1" placeholder="Nº do processo"></div>
+    <div class="fr"><label>Tipo de audiência</label><select id="f2">${tipoAudOpts('')}</select></div>
+    <div class="fr"><label>Data</label><input type="date" id="f3"></div>
+    <div class="fr"><label>Horário</label><input type="time" id="f4"></div>
+    <div class="fr"><label>Local / Vara</label><input id="f5" placeholder="Ex: 1ª Vara Cível — Manaus"></div>
+    <div class="fr"><label>Responsável</label><select id="f6">${uOpts(currentUser)}</select></div>
+    <div class="fr"><label>Observações</label><textarea id="f7"></textarea></div>
+    <div class="mbtns"><button class="btn" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="saveAud()">Salvar</button></div>`);
+}
+
+function openEdit(type,id){
+  if(type==='proc'){
+    const r=D.processos.find(x=>x.id===id);
+    showModal(`<h3>✏️ Editar processo</h3>
+      <div class="fr"><label>Nº Processo</label><input id="f0" value="${r.numero||''}"></div>
+      <div class="fr"><label>Cliente</label><input id="f1" value="${r.cliente||''}"></div>
+      <div class="fr"><label>Área</label><select id="f2">${aOpts(r.area)}</select></div>
+      <div class="fr"><label>Status</label><select id="f3">${stProcOpts(r.status)}</select></div>
+      <div class="fr"><label>Prazo</label><input type="date" id="f4" value="${r.prazo||''}"></div>
+      <div class="fr"><label>Responsável</label><select id="f5">${uOpts(r.responsavel)}</select></div>
+      <div class="fr"><label>Observações</label><textarea id="f6">${r.obs||''}</textarea></div>
+      <div class="mbtns"><button class="btn" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="updProc(${id})">Salvar</button></div>`);
+  } else if(type==='cli'){
+    const r=D.clientes.find(x=>x.id===id);
+    showModal(`<h3>✏️ Editar cliente</h3>
+      <div class="fr"><label>Nome</label><input id="f0" value="${r.nome||''}"></div>
+      <div class="fr"><label>CPF/CNPJ</label><input id="f1" value="${r.cpf||''}"></div>
+      <div class="fr"><label>Telefone</label><input id="f2" value="${r.telefone||''}"></div>
+      <div class="fr"><label>Cidade</label><input id="f3" value="${r.cidade||''}"></div>
+      <div class="mbtns"><button class="btn" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="updCli(${id})">Salvar</button></div>`);
+  } else if(type==='tar'){
+    const r=D.tarefas.find(x=>x.id===id);
+    showModal(`<h3>✏️ Editar tarefa</h3>
+      <div class="fr"><label>Tipo</label><select id="f0">${tipoOpts(r.tipo)}</select></div>
+      <div class="fr"><label>Processo</label><input id="f1" value="${r.processo||''}"></div>
+      <div class="fr"><label>Cliente</label><input id="f2" value="${r.cliente||''}"></div>
+      <div class="fr"><label>Responsável</label><select id="f3">${uOpts(r.responsavel)}</select></div>
+      <div class="fr"><label>Prazo</label><input type="date" id="f4" value="${r.prazo||''}"></div>
+      <div class="fr"><label>Status</label><select id="f5">${stTarOpts(r.status)}</select></div>
+      <div class="fr"><label>Observações</label><textarea id="f6">${r.obs||''}</textarea></div>
+      <div class="mbtns"><button class="btn" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="updTar(${id})">Salvar</button></div>`);
+  } else {
+    const r=D.audiencias.find(x=>x.id===id);
+    showModal(`<h3>✏️ Editar audiência</h3>
+      <div class="fr"><label>Cliente</label><input id="f0" value="${r.cliente||''}"></div>
+      <div class="fr"><label>Processo</label><input id="f1" value="${r.processo||''}"></div>
+      <div class="fr"><label>Tipo</label><select id="f2">${tipoAudOpts(r.tipo)}</select></div>
+      <div class="fr"><label>Data</label><input type="date" id="f3" value="${r.data||''}"></div>
+      <div class="fr"><label>Horário</label><input type="time" id="f4" value="${r.hora||''}"></div>
+      <div class="fr"><label>Local / Vara</label><input id="f5" value="${r.local||''}"></div>
+      <div class="fr"><label>Responsável</label><select id="f6">${uOpts(r.responsavel)}</select></div>
+      <div class="fr"><label>Observações</label><textarea id="f7">${r.obs||''}</textarea></div>
+      <div class="mbtns"><button class="btn" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="updAud(${id})">Salvar</button></div>`);
+  }
+}
+
+// SAVES
+async function saveProc(){
+  if(!v('f0')||!v('f1')){alert('Preencha o número e o cliente.');return;}
+  const{error}=await sb.from('processos').insert({numero:v('f0'),cliente:v('f1'),area:v('f2'),status:v('f3'),prazo:v('f4')||null,responsavel:v('f5'),obs:v('f6')});
+  if(error){alert('Erro ao salvar: '+error.message);return;}
+  await addLog('adicionou processo',v('f0'),'','','');
+  closeModal();
+}
+async function saveCli(){
+  if(!v('f0')){alert('Informe o nome.');return;}
+  const{error}=await sb.from('clientes').insert({nome:v('f0'),cpf:v('f1'),telefone:v('f2'),cidade:v('f3'),processos:0});
+  if(error){alert('Erro ao salvar: '+error.message);return;}
+  await addLog('adicionou cliente',v('f0'),'','','');
+  closeModal();
+}
+async function saveTar(){
+  if(!v('f1')){alert('Informe o processo.');return;}
+  const{error}=await sb.from('tarefas').insert({tipo:v('f0'),processo:v('f1'),cliente:v('f2'),responsavel:v('f3'),prazo:v('f4')||null,status:v('f5'),obs:v('f6')});
+  if(error){alert('Erro ao salvar: '+error.message);return;}
+  await addLog('criou tarefa',v('f0'),'','','');
+  closeModal();
+}
+async function saveAud(){
+  if(!v('f0')||!v('f3')){alert('Informe o cliente e a data.');return;}
+  const{error}=await sb.from('audiencias').insert({cliente:v('f0'),processo:v('f1'),tipo:v('f2'),data:v('f3'),hora:v('f4')||null,local:v('f5'),responsavel:v('f6'),obs:v('f7')});
+  if(error){alert('Erro ao salvar: '+error.message);return;}
+  await addLog('agendou audiência',v('f0'),'','','');
+  closeModal();
+}
+
+// UPDATES
+async function updProc(id){
+  const r=D.processos.find(x=>x.id===id);
+  const upd={numero:v('f0'),cliente:v('f1'),area:v('f2'),status:v('f3'),prazo:v('f4')||null,responsavel:v('f5'),obs:v('f6')};
+  for(const[c,val] of Object.entries(upd)){if(String(r[c]||'')!==String(val||''))await addLog('editou',r.numero,c,r[c]||'',val||'');}
+  await sb.from('processos').update(upd).eq('id',id);
+  closeModal();
+}
+async function updCli(id){
+  const r=D.clientes.find(x=>x.id===id);
+  const upd={nome:v('f0'),cpf:v('f1'),telefone:v('f2'),cidade:v('f3')};
+  for(const[c,val] of Object.entries(upd)){if(String(r[c]||'')!==String(val||''))await addLog('editou cliente',r.nome,c,r[c]||'',val||'');}
+  await sb.from('clientes').update(upd).eq('id',id);
+  closeModal();
+}
+async function updTar(id){
+  const r=D.tarefas.find(x=>x.id===id);
+  const upd={tipo:v('f0'),processo:v('f1'),cliente:v('f2'),responsavel:v('f3'),prazo:v('f4')||null,status:v('f5'),obs:v('f6')};
+  for(const[c,val] of Object.entries(upd)){if(String(r[c]||'')!==String(val||''))await addLog('editou tarefa',r.tipo,c,r[c]||'',val||'');}
+  await sb.from('tarefas').update(upd).eq('id',id);
+  closeModal();
+}
+async function updAud(id){
+  const r=D.audiencias.find(x=>x.id===id);
+  const upd={cliente:v('f0'),processo:v('f1'),tipo:v('f2'),data:v('f3'),hora:v('f4')||null,local:v('f5'),responsavel:v('f6'),obs:v('f7')};
+  for(const[c,val] of Object.entries(upd)){if(String(r[c]||'')!==String(val||''))await addLog('editou audiência',r.cliente,c,r[c]||'',val||'');}
+  await sb.from('audiencias').update(upd).eq('id',id);
+  closeModal();
+}
+</script>
+</body>
+</html>
