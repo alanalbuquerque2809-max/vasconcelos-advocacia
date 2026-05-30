@@ -146,7 +146,7 @@ tr:hover td{background:var(--bg2)}
         <input type="text" placeholder="Buscar processo, cliente..." id="searchProc" oninput="renderProc()">
         <select id="filtStatus" onchange="renderProc()">
           <option value="">Todos os status</option>
-          <option>Julgada Procedente</option><option>Julgada Improcedente</option><option>Aguardando</option><option>Aguardando Julgamento</option><option>Encerrado</option><option>Urgente</option>
+          <option>Julgada Procedente</option><option>Julgada Improcedente</option><option>Em andamento</option><option>Aguardando Julgamento</option><option>Encerrado</option><option>Suspenso</option>
         </select>
         <select id="filtArea" onchange="renderProc()">
           <option value="">Todas as áreas</option>
@@ -269,7 +269,7 @@ const AVT_BG=['#E6F1FB','#EAF3DE','#EEEDFE','#FAEEDA'];
 const AVT_TXT=['#185FA5','#3B6D11','#3C3489','#854F0B'];
 const MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 const TIPOS_TAREFA=['Fazer Impugnação','Fazer Recurso','Fazer Diligência','Fazer Contrarrazões','Fazer Embargos de Declaração','Fazer Contestação','Solicitar Execução','Expedir Alvará','Arquivado em Definitivo'];
-const SC_PROC={'Julgada Procedente':'b-green','Julgada Improcedente':'b-red','Aguardando':'b-yellow','Aguardando Julgamento':'b-purple','Encerrado':'b-gray','Urgente':'b-red'};
+const SC_PROC={'Julgada Procedente':'b-green','Julgada Improcedente':'b-red','Em andamento':'b-blue','Aguardando Julgamento':'b-purple','Encerrado':'b-gray','Suspenso':'b-yellow'};
 const SC_TAR={'Pendente':'b-yellow','Em andamento':'b-blue','Aguardando Julgamento':'b-purple','Concluída':'b-green'};
 const TC={'Fazer Impugnação':'b-blue','Fazer Recurso':'b-purple','Fazer Diligência':'b-teal','Fazer Contrarrazões':'b-blue','Fazer Embargos de Declaração':'b-yellow','Fazer Contestação':'b-blue','Solicitar Execução':'b-teal','Expedir Alvará':'b-green','Arquivado em Definitivo':'b-gray'};
 
@@ -388,7 +388,7 @@ function badge(s,map){return`<span class="badge ${(map||SC_PROC)[s]||'b-gray'}">
 function uOpts(sel){return USERS.map(u=>`<option${u===sel?' selected':''}>${u}</option>`).join('')}
 function tipoOpts(sel){return TIPOS_TAREFA.map(t=>`<option${t===sel?' selected':''}>${t}</option>`).join('')}
 function aOpts(sel){return['Consumidor','Trabalhista','Cível','Criminal','Família','Previdenciário'].map(a=>`<option${a===sel?' selected':''}>${a}</option>`).join('')}
-function stProcOpts(sel){return['Julgada Procedente','Julgada Improcedente','Aguardando','Aguardando Julgamento','Encerrado','Urgente'].map(s=>`<option${s===sel?' selected':''}>${s}</option>`).join('')}
+function stProcOpts(sel){return['Julgada Procedente','Julgada Improcedente','Em andamento','Aguardando Julgamento','Encerrado','Suspenso'].map(s=>`<option${s===sel?' selected':''}>${s}</option>`).join('')}
 function stTarOpts(sel){return['Pendente','Em andamento','Aguardando Julgamento','Concluída'].map(s=>`<option${s===sel?' selected':''}>${s}</option>`).join('')}
 function tipoAudOpts(sel){return['Audiência de Conciliação','Audiência de Instrução','Audiência de Julgamento','Audiência Inicial','Audiência de Custódia','Outra'].map(t=>`<option${t===sel?' selected':''}>${t}</option>`).join('')}
 function isAlan(){return currentUser==='Alan Albuquerque'}
@@ -433,13 +433,13 @@ function renderProc(){
       <button class="btn" style="padding:3px 7px" onclick="openEdit('proc',${r.id})">✏️</button>
       <button class="btn btn-danger" style="padding:3px 7px" onclick="delRow('processos',${r.id},'proc')">🗑️</button>
     </td></tr>`).join(''):`<tr><td colspan="7" class="empty">Nenhum processo encontrado</td></tr>`;
-  const tot=D.processos.length,urg=D.processos.filter(r=>r.status==='Urgente').length,proc=D.processos.filter(r=>r.status==='Julgada Procedente').length,impro=D.processos.filter(r=>r.status==='Julgada Improcedente').length,enc=D.processos.filter(r=>r.status==='Encerrado').length,agj=D.processos.filter(r=>r.status==='Aguardando Julgamento').length;
+  const tot=D.processos.length,sus=D.processos.filter(r=>r.status==='Suspenso').length,proc=D.processos.filter(r=>r.status==='Julgada Procedente').length,impro=D.processos.filter(r=>r.status==='Julgada Improcedente').length,enc=D.processos.filter(r=>r.status==='Encerrado').length,agj=D.processos.filter(r=>r.status==='Aguardando Julgamento').length;
   g('stats-proc').innerHTML=`
     <div class="sc"><div class="sn">${tot}</div><div class="sl">Total</div></div>
     <div class="sc"><div class="sn" style="color:var(--success)">${proc}</div><div class="sl">Procedentes</div></div>
     <div class="sc"><div class="sn" style="color:var(--danger)">${impro}</div><div class="sl">Improcedentes</div></div>
     <div class="sc"><div class="sn" style="color:var(--purple)">${agj}</div><div class="sl">Ag. Julgamento</div></div>
-    <div class="sc"><div class="sn" style="color:var(--danger)">${urg}</div><div class="sl">Urgentes</div></div>
+    <div class="sc"><div class="sn" style="color:var(--warn)">${sus}</div><div class="sl">Suspensos</div></div>
     <div class="sc"><div class="sn" style="color:var(--text2)">${enc}</div><div class="sl">Encerrados</div></div>`;
 }
 
@@ -795,5 +795,4 @@ async function updAud(id){
   closeModal();
 }
 </script>
-</body>
-</html>
+</body
